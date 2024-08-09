@@ -1,0 +1,36 @@
+name: frr01
+
+topology:
+  nodes:
+    br-clab:
+        kind: bridge
+    router1:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - router1/daemons:/etc/frr/daemons
+        - router1/frr.conf:/etc/frr/frr.conf
+    swgp-go-server:
+      kind: linux
+      image: swgp-go
+    swgp-go-client:
+      kind: linux
+      image: swgp-go
+
+  links:
+    - endpoints: ["PC1:eth1", "router1:eth1"]
+    - endpoints: ["router1:eth2", "router2:eth1"]
+    - endpoints: ["router2:eth2", "router3:eth1"]
+    - endpoints: ["router3:eth2", "router4:eth1"]
+    - endpoints: ["router4:eth2", "router5:eth1"]
+    - endpoints: ["router5:eth2", "mail:eth1"]
+    - endpoints: ["router4:eth3", "router6:eth1"]
+    - endpoints: ["router6:eth2", "router7:eth1"]
+    - endpoints: ["router7:eth2", "www:eth1"]
+    - endpoints: ["router4:eth4", "br-clab:eth1"]
+    - endpoints: ["PC2:eth1", "br-clab:eth2"]
+    - endpoints: ["PC3:eth1", "br-clab:eth3"]
+    - endpoints: ["PC4:eth1", "br-clab:eth4"]
+    - endpoints: ["PC5:eth1", "br-clab:eth5"]
+    - endpoints: ["dns:eth1", "br-clab:eth6"]
+

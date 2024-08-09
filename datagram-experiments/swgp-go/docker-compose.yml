@@ -1,0 +1,62 @@
+version: '3'
+
+services:
+  server:
+    build:
+      context: swgp-go
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./server:/etc/wireguard
+    networks:
+        server-router:
+            ipv6_address: "2001:1111::2"
+    command: sleep infinity
+
+  client:
+    privileged: true
+    build:
+      context: swgp-go
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    volumes:
+      - ./client:/etc/wireguard
+    networks:
+        client-router: 
+            ipv6_address: "2001:2222::2"
+    sysctls:
+        - net.ipv4.conf.all.src_valid_mark=1
+    command: sleep infinity
+
+  router:
+    build:
+      context: ./router
+    cap_add:
+      - NET_ADMIN
+    networks:
+      server-router:
+        ipv6_address: "2001:1111::3"
+      client-router:
+        ipv6_address: "2001:2222::3"
+    sysctls:
+        - net.ipv6.conf.all.forwarding=1
+        - net.ipv4.conf.all.forwarding=1
+    command: sleep infinity
+
+networks:
+  client-router:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+        driver: default
+        config:
+            - subnet: "2001:2222::3/64"
+  server-router:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+        driver: default
+        config:
+            - subnet: "2001:1111::3/64"
+

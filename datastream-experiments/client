@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+import socket,argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('-p','--send-size',dest='size',action='store',type=int,default=600)
+args,unknown = parser.parse_known_args()
+clientPort = 31000
+#this is the client MITM
+serverPort = 31003
+#this is the final server MITM that's targeted in the SOCKS request
+def open_connection(socks=False):
+    proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    proxy_socket.connect(('127.0.0.1', clientPort))
+    if socks:
+        proxy_socket.send(b'\x05\x01\x00')
+        proxy_socket.send(b'\x05\x01\x00\x01')
+
+        proxy_socket.send(b'\x7f\x00\x00\x01')
+        proxy_socket.send((serverPort).to_bytes(2,'big'))
+    return proxy_socket
+
+#if socks5 proxy
+conn = open_connection(socks=True)
+#else
+import time
+count = 0
+conn.settimeout(10)
+s = set()
+for i in range(10):
+
+    conn.send(bytes(str(i),'ascii')*args.size)
+    try:
+        dat = conn.recv(10000)
+    except socket.timeout:
+        continue
+    count += len(dat)
+    if not dat:
+        break
+    if dat:
+        s.add(chr(dat[0]))
+        with open('client.txt','w') as f:
+            f.write(f"{count} {s}\n") 
+    time.sleep(2)
+
+conn.close()
